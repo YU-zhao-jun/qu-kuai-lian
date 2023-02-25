@@ -17,79 +17,61 @@
         </a>
         <b class="logo_font">产品溯源</b>
       </div>
-
-      <el-menu-item index="AdminMain">
-        <el-icon>
-          <House />
-        </el-icon>
-        <span style="margin-left: 26px">数据详情</span>
-      </el-menu-item>
-      <el-sub-menu index="Manage">
-        <template #title>
-          <el-icon>
-            <Connection/>
-          </el-icon>
-          <span>企业管理</span>
-        </template>
-        <div class="min-menu">
-          <el-menu-item index="mfrsUser"><span>生产商</span></el-menu-item>
-          <el-menu-item index="2-2"><span>经销商</span></el-menu-item>
-          <el-menu-item index="2-3"><span>零售商</span></el-menu-item>
+      <el-scrollbar height="80%">
+        <div v-for="item in menus" :key="item.id">
+          <div v-if="item.path">
+            <el-menu-item :index="item.path">
+              <template #default>
+                <el-icon>
+                  <component :is="item.icon"></component>
+                </el-icon>
+                <span style="margin-left: 26px">{{ item.name }}</span>
+              </template>
+            </el-menu-item>
+          </div>
+          <div v-else>
+            <el-sub-menu :index="item.id + ''">
+              <template #title>
+                <el-icon>
+                  <component :is="item.icon"></component>
+                </el-icon>
+                <span style="margin-left: 26px">{{ item.name }}</span>
+              </template>
+              <div v-for="subItem in item.children" :key="subItem.id">
+                <el-menu-item :index="subItem.path">
+                  <template #title>
+                    <el-icon>
+                      <component :is="subItem.icon"></component>
+                    </el-icon>
+                    <span style="margin-right: 30px">{{ subItem.name }}</span>
+                  </template>
+                </el-menu-item>
+              </div>
+            </el-sub-menu>
+          </div>
         </div>
-      </el-sub-menu>
-      <el-sub-menu index="3">
-        <template #title>
-          <el-icon>
-            <Document/>
-          </el-icon>
-          <span>权限管理</span>
-        </template>
-        <div class="min-menu">
-          <el-menu-item index="mfrsMenu"><span>生产商</span></el-menu-item>
-          <el-menu-item index="3-2"><span>经销商</span></el-menu-item>
-          <el-menu-item index="3-3"><span>零售商</span></el-menu-item>
-        </div>
-      </el-sub-menu>
-      <el-sub-menu index="4">
-        <template #title>
-          <el-icon>
-            <setting/>
-          </el-icon>
-          <span>菜单管理</span>
-        </template>
-        <div class="min-menu">
-          <el-menu-item index="1-1"><span>生产商</span></el-menu-item>
-          <el-menu-item index="1-2"><span>经销商</span></el-menu-item>
-          <el-menu-item index="1-3"><span>零售商</span></el-menu-item>
-        </div>
-      </el-sub-menu>
-      <el-menu-item index="/">
-        <el-icon><Loading /></el-icon>
-        <span style="margin-left: 26px" @click="logout">退出系统</span>
-      </el-menu-item>
+        <el-menu-item index="#" @click="logout">
+          <template #default>
+            <el-icon>
+              <Loading/>
+            </el-icon>
+            <span style="margin-left: 26px">退出系统</span>
+          </template>
+        </el-menu-item>
+      </el-scrollbar>
     </el-menu>
   </div>
 </template>
 
 <script>
-import {
-  House,
-  Document,
-  Connection,
-  Location,
-  Setting,
-  Loading
-} from '@element-plus/icons-vue'
 
 export default {
-  name: "AdminMenu",
-  components: {
-    House,
-    Document,
-    Connection,
-    Location,
-    Setting,
-    Loading
+  name: "Menu",
+  components: {},
+  data() {
+    return {
+      menus: localStorage.getItem("menus") ? JSON.parse(localStorage.getItem("menus")) : [],
+    }
   },
   props: {
     isCollapse: Boolean,
@@ -97,8 +79,7 @@ export default {
   },
   methods: {
     logout() {
-      this.$router.push("/AdminLogin")
-      localStorage.removeItem("adminUser")
+      this.$store.commit("logout")
       this.$message.success("退出成功")
     }
   }

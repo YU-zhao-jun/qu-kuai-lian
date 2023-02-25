@@ -2,9 +2,9 @@
   <div class="container backdrop">
     <div class="demo-input-suffix">
       <el-row>
-        <span class="info_font">生产商信息</span>
+        <span class="info_font">零售商信息</span>
         <span class="search_x">名称：</span>
-        <el-input v-model="mfrs_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
+        <el-input v-model="retailer_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <User/>
@@ -12,18 +12,18 @@
           </template>
         </el-input>
         <span class="search_x">类型：</span>
-        <el-input v-model="mfrs_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
+        <el-input v-model="retailer_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <PieChart/>
             </el-icon>
           </template>
         </el-input>
-
         <el-button type="primary" :icon="Search" class="ml-10" @click="load">搜索</el-button>
+        <el-button type="warning" :icon="Refresh" class="ml-10" @click="reset">重置</el-button>
         <el-button type="success" :icon="CirclePlus" class="ml-10" @click="Add">新增</el-button>
         <el-upload
-            action="http://localhost:9090/manufacturer/Import"
+            action="http://localhost:9090/retailer/Import"
             :show-file-list="false"
             :on-success="handleExcelImportSuccess"
             style="display: inline-block"
@@ -34,46 +34,43 @@
       </el-row>
     </div>
 
-    <el-drawer v-model="drawer" title="详细信息" :with-header="false" size="40%">
+    <!--    新增-->
+    <el-drawer v-model="drawer" title="新增信息" :with-header="false" size="40%">
       <span>详细信息</span>
-      <el-divider content-position="left"><span style="font-size: 10px">MANUFACTURER   DETAILS</span></el-divider>
-      <el-form :model="form" label-width="60px">
+      <el-divider content-position="left"><span style="font-size: 10px">RETAILER   DETAILS</span></el-divider>
+      <el-form :model="form" label-width="80px">
         <el-form-item label="名称">
-          <el-input v-model="form.manufacturer_name" autocomplete="off" style="width: 340px"/>
+          <el-input v-model="form.retailer_name" autocomplete="off" style="width: 340px"/>
         </el-form-item>
-        <el-form-item label="类型">
-          <el-input v-model="form.manufacturer_type" autocomplete="off" style="width: 340px"/>
+        <el-form-item label="密码">
+          <el-input v-model="form.retailer_password" autocomplete="off" style="width: 340px" show-password/>
         </el-form-item>
-        <el-form-item label="图片">
+        <el-form-item label="营业证件">
           <el-upload
               class="avatar-uploader"
-              action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+              action="http://localhost:9090/files/upload"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload"
           >
-            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+            <img v-if="imageUrl" :src="imageUrl" class="avatar" alt=""/>
+            <el-icon v-else class="avatar-uploader-icon">
+              <Plus/>
+            </el-icon>
           </el-upload>
         </el-form-item>
         <el-row>
-        <el-form-item label="账号">
-          <el-input v-model="form.manufacturer_account" autocomplete="off" style="width: 140px"/>
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="form.manufacturer_password" autocomplete="off" style="width: 140px" show-password/>
-        </el-form-item>
+          <el-form-item label="类型">
+            <el-input v-model="form.retailer_type" autocomplete="off" style="width: 130px"/>
+          </el-form-item>
+          <el-form-item label="电话">
+            <el-input v-model="form.retailer_phone" autocomplete="off" style="width: 130px"/>
+          </el-form-item>
         </el-row>
-        <el-row>
-        <el-form-item label="电话">
-          <el-input v-model="form.manufacturer_phone" autocomplete="off" style="width: 140px"/>
-        </el-form-item>
         <el-form-item label="邮箱">
-          <el-input v-model="form.manufacturer_email" autocomplete="off" style="width: 140px"/>
+          <el-input v-model="form.retailer_email" autocomplete="off" style="width: 340px"/>
         </el-form-item>
-        </el-row>
         <el-form-item label="地址">
-          <el-input v-model="form.manufacturer_address" autocomplete="off" style="width: 340px"/>
+          <el-input v-model="form.retailer_address" autocomplete="off" style="width: 340px"/>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -84,18 +81,100 @@
       </template>
     </el-drawer>
 
+    <!--    详情-->
+    <el-drawer v-model="drawerDetails" title="详细信息" :with-header="false" size="40%">
+      <span>详细信息</span>
+      <el-divider content-position="left"><span style="font-size: 10px">RETAILER   DETAILS</span></el-divider>
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="名称">
+          <el-input v-model="form.retailer_name" autocomplete="off" style="width: 340px"/>
+        </el-form-item>
+        <el-form-item label="营业证件">
+          <el-upload
+              class="avatar-uploader"
+              action="http://localhost:9090/files/upload"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+          >
+            <img v-if="form.retailer_image" :src="form.retailer_image" class="avatar" alt=""/>
+            <el-icon v-else class="avatar-uploader-icon">
+              <Plus/>
+            </el-icon>
+          </el-upload>
+        </el-form-item>
+        <el-row>
+          <el-form-item label="账号">
+            <el-input v-model="form.retailer_account" autocomplete="off" style="width: 120px" :disabled="true"/>
+          </el-form-item>
+          <el-form-item label="类型">
+            <el-input v-model="form.retailer_type" autocomplete="off" style="width: 140px"/>
+          </el-form-item>
+        </el-row>
+        <el-row>
+          <el-form-item label="电话">
+            <el-input v-model="form.retailer_phone" autocomplete="off" style="width: 120px"/>
+          </el-form-item>
+          <el-form-item label="邮箱">
+            <el-input v-model="form.retailer_email" autocomplete="off" style="width: 140px"/>
+          </el-form-item>
+        </el-row>
+        <el-form-item label="地址">
+          <el-input v-model="form.retailer_address" autocomplete="off" style="width: 340px"
+                    :autosize="{ minRows: 2, maxRows: 4 }" type="textarea"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+         <el-button @click="drawerDetails = false">取消</el-button>
+          <el-button type="primary" @click="details">确认</el-button>
+        </span>
+      </template>
+    </el-drawer>
+
+    <!--    修改密码-->
+    <el-dialog
+        v-model="dialogVisible"
+        title="修改密码"
+        width="360px"
+    >
+      <el-form :model="form" label-width="80px" :rules="rules" ref="newPwd">
+        <el-form-item label="账号" prop="Account">
+          <el-input v-model="form.retailer_account" autocomplete="off" style="width: 200px"
+                    :disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="form.newPassword" autocomplete="off" show-password style="width: 200px"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" autocomplete="off" show-password style="width: 200px"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+             <span class="dialog-footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="modify">确定</el-button>
+          </span>
+      </template>
+    </el-dialog>
+
     <!--    表单-->
     <el-table :data="tableData" border style="margin: 20px auto" row-key="id">
-      <el-table-column fixed prop="manufacturer_name" label="生产商名称" width="180"/>
-      <el-table-column prop="manufacturer_type" label="类型" width="150"/>
-      <el-table-column prop="manufacturer_account" label="账号" width="150"/>
-      <el-table-column prop="manufacturer_phone" label="电话" width="180"/>
-      <el-table-column prop="manufacturer_email" label="邮箱" width="240"/>
-      <el-table-column prop="create_time" label="注册时间" width="180"/>
-      <el-table-column prop="manufacturer_address" label="地址" width="400"/>
-      <el-table-column fixed="right" label="操作" width="100">
+      <el-table-column fixed prop="retailer_name" label="生产商名称" width="200"/>
+      <el-table-column prop="retailer_type" label="类型" width="150"/>
+      <el-table-column prop="retailer_account" label="账号" width="150"/>
+      <el-table-column prop="retailer_phone" label="电话" width="180"/>
+      <el-table-column prop="retailer_email" label="邮箱" width="240"/>
+      <el-table-column prop="retailer_address" label="地址" width="400"/>
+      <el-table-column prop="create_time" label="注册时间" width="180">
+        <template #default="scope">
+          <span>{{ scope.row.create_time.toLocaleString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column fixed="right" label="操作" width="150">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="Edit(scope.row)">详情</el-button>
+          <el-button link type="primary" size="small" @click="ChangePassword(scope.row)">修改密码</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -118,33 +197,45 @@
 
 <script>
 
-import {User, PieChart, Search, CirclePlus, Download, Upload} from '@element-plus/icons-vue'
+import {User, PieChart, Search, Refresh, CirclePlus, Download, Upload} from '@element-plus/icons-vue'
 
 export default {
-  name: "ManufacturerInfo",
-  components: {
-    User,
-    PieChart,
-    Search,
-  },
+  name: "RetailerInfo",
+  components: {},
   data() {
     return {
       Search: Search,
+      Refresh: Refresh,
       CirclePlus: CirclePlus,
       Download: Download,
       Upload: Upload,
       drawer: false,
+      drawerDetails: false,
+      dialogVisible: false,
       form: {},
+      rules: {
+        newPassword: [
+          {required: true, message: '请输入密码', trigger: 'blur'},
+          {min: 5, max: 20, message: '请输入5-20个字符', trigger: 'blur'},
+        ],
+        confirmPassword: [
+          {required: true, message: '请确认密码', trigger: 'blur'},
+          {min: 5, max: 20, message: '请输入5-20个字符', trigger: 'blur'},
+        ],
+      },
+      newPwd: {},
       tableData: [],
       records: "",
       total: 0,
       pageNum: 1,
       pageSize: 8,
-      mfrs_name: "",
-      mfrs_type: "",
+      retailer_name: "",
+      retailer_type: "",
       small: true,
-      disabled: false,
       background: true,
+      disabled: false,
+      imageUrl: '',
+      src: '',
     }
   },
   created() {
@@ -152,12 +243,12 @@ export default {
   },
   methods: {
     load() {
-      this.request.get("/manufacturer/page", {
+      this.request.get("/retailer/page", {
         params: {
           pageNum: this.pageNum,
           pageSize: this.pageSize,
-          manufacturer_name: this.mfrs_name,
-          manufacturer_type: this.mfrs_type
+          retailer_name: this.retailer_name,
+          retailer_type: this.retailer_type
         }
       }).then(res => {
         this.tableData = res.data.records
@@ -170,25 +261,70 @@ export default {
     },
     Edit(row) {
       this.form = JSON.parse(JSON.stringify(row))
-      this.drawer = true
+      this.drawerDetails = true
+    },
+    ChangePassword(row) {
+      this.form = JSON.parse(JSON.stringify(row))
+      this.dialogVisible = true
     },
     Export() {
-      window.open("http://localhost:9090/manufacturer/Export", "_self")
+      window.open("http://localhost:9090/retailer/Export", "_self")
     },
     save() {
-      this.request.post("/manufacturer", this.form).then(res => {
+      this.form.retailer_image = this.imageUrl
+      this.request.post("/retailer/register", this.form).then(res => {
+        if (res.code === '200') {
+          this.$alert(res.data, '添加的账号为:', {
+            confirmButtonText: '确定',
+          })
+          this.load()
+          this.drawer = false
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    details() {
+      this.request.post("/retailer", this.form).then(res => {
         if (res.code === '200') {
           this.$message.success("保存成功")
-          this.drawer = false
+          this.drawerDetails = false
           this.load()
         } else {
           this.$message.error("保存失败")
         }
       })
     },
+    modify() {
+      this.$refs['newPwd'].validate((valid) => {
+        if (valid) {
+          if (this.form.newPassword !== this.form.confirmPassword) {
+            this.$message.error("2次输入的新密码不相同")
+            return false
+          }
+          this.request.post("/retailer/password", this.form).then(res => {
+            if (res.code === '200') {
+              this.$message.success("修改成功")
+              this.dialogVisible = false
+            } else {
+              this.$message.error(res.msg)
+            }
+          })
+        }
+      })
+    },
+    reset() {
+      this.retailer_name = ""
+      this.retailer_type = ""
+      this.load()
+    },
     handleExcelImportSuccess() {
       this.$message.success("导入成功")
       this.load()
+    },
+    handleAvatarSuccess(res) {
+      this.imageUrl = res
+      this.form.retailer_image = res
     },
     handleSizeChange(pageSize) {
       this.pageSize = pageSize
@@ -225,15 +361,15 @@ export default {
 }
 </style>
 
-  <style>
-  .avatar-uploader .el-upload {
-    border: 1px dashed var(--el-border-color);
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: var(--el-transition-duration-fast);
-  }
+<style>
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
 
 .avatar-uploader .el-upload:hover {
   border-color: var(--el-color-primary);

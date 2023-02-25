@@ -4,7 +4,7 @@
       <el-row>
         <span class="info_font">生产商权限</span>
         <span class="search_x">名称：</span>
-        <el-input v-model="mfrs_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
+        <el-input v-model="manufacturer_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <User/>
@@ -12,7 +12,7 @@
           </template>
         </el-input>
         <span class="search_x">类型：</span>
-        <el-input v-model="mfrs_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
+        <el-input v-model="manufacturer_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <PieChart/>
@@ -29,7 +29,8 @@
       <el-table-column fixed prop="id" label="ID" width="60"/>
       <el-table-column prop="manufacturer_name" label="生产商名称" width="180"/>
       <el-table-column prop="manufacturer_type" label="类型" width="150"/>
-      <el-table-column prop="description" label="描述"/>
+      <el-table-column prop="manufacturer_account" label="账号" width="150"/>
+      <el-table-column prop="menu_description" label="描述"/>
       <el-table-column fixed="right" label="操作" width="150">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="selectMenu(scope.row)">分配菜单</el-button>
@@ -38,13 +39,15 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="menuDialogVis" title="菜单分配" width="30%">
+    <el-dialog v-model="menuDialogVis" center title="菜单分配" width="360px">
+      <el-scrollbar height="200px">
       <el-tree
           :props="props"
           :data="menuData"
           show-checkbox
           node-key="id"
           ref="tree"
+          :check-strictly="true"
           :default-expanded-keys="expends"
           :default-checked-keys="checks">
         <template #default="{ node, data }">
@@ -56,6 +59,7 @@
          </span>
         </template>
       </el-tree>
+      </el-scrollbar>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="menuDialogVis = false">取消</el-button>
@@ -64,16 +68,16 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="dialogFormVisible" title="生产商信息" width="480px">
+    <el-dialog v-model="dialogFormVisible" center title="生产商信息" width="360px">
       <el-form :model="form" label-width="60px">
         <el-form-item label="名称">
-          <el-input v-model="form.manufacturer_name" width="300px" autocomplete="off" :disabled="true"/>
+          <el-input v-model="form.manufacturer_name" style="width: 220px" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="类型">
-          <el-input v-model="form.manufacturer_type" width="300px" autocomplete="off" :disabled="true"/>
+          <el-input v-model="form.manufacturer_type" style="width: 220px" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" width="300px" autocomplete="off"/>
+          <el-input v-model="form.menu_description" style="width: 220px" autocomplete="off"/>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -105,15 +109,11 @@
 
 <script>
 
-import {User, PieChart, Search, Refresh, CirclePlus} from '@element-plus/icons-vue'
+import {Search, Refresh, CirclePlus} from '@element-plus/icons-vue'
 
 export default {
-  name: "ManufacturerMenu",
-  components: {
-    User,
-    PieChart,
-    Search,
-  },
+  name: "ManufacturerPower",
+  components: {},
   data() {
     return {
       Search: Search,
@@ -127,8 +127,8 @@ export default {
       total: 0,
       pageNum: 1,
       pageSize: 8,
-      mfrs_name: "",
-      mfrs_type: "",
+      manufacturer_name: "",
+      manufacturer_type: "",
       small: true,
       disabled: false,
       background: true,
@@ -139,8 +139,6 @@ export default {
       expends: [],
       checks: [],
       roleId: 0,
-      roleFlag: '',
-      ids: []
     }
   },
   created() {
@@ -148,12 +146,12 @@ export default {
   },
   methods: {
     load() {
-      this.request.get("/mfrs/page", {
+      this.request.get("/manufacturer/page", {
         params: {
           pageNum: this.pageNum,
           pageSize: this.pageSize,
-          manufacturer_name: this.mfrs_name,
-          manufacturer_type: this.mfrs_type
+          manufacturer_name: this.manufacturer_name,
+          manufacturer_type: this.manufacturer_type
         }
       }).then(res => {
         this.tableData = res.data.records
@@ -164,21 +162,20 @@ export default {
     selectMenu(roleId) {
       //请求菜单数据
       this.roleId = roleId
-      // this.roleFlag = role.flag
       // 请求菜单数据
       this.request.get("/menu").then(res => {
         this.menuData = res.data
         // 把后台返回的菜单数据处理成 id数组
         this.expends = this.menuData.map(v => v.id)
       })
-      // this.request.get("/mfrs/roleMenu/" + this.roleId).then(res => {
-      //   this.checks = res.data
-      // })
+      this.request.get("/manufacturer/roleMenu/" + this.roleId.id).then(res => {
+        this.checks = res.data
+      })
       this.menuDialogVis = true
     },
     saveRoleMenu() {
-      this.request.post("/mfrs/roleMenu/" + this.roleId, this.$refs.tree.getCheckedKeys()).then(res => {
-        if (res.code === '0' || res.code === '200') {
+      this.request.post("/manufacturer/roleMenu/" + this.roleId.id, this.$refs.tree.getCheckedKeys()).then(res => {
+        if (res.code === '200') {
           this.$message.success("绑定成功")
           this.menuDialogVis = false
         } else {
@@ -187,12 +184,12 @@ export default {
       })
     },
     reset() {
-      this.mfrs_name = ""
-      this.mfrs_type = ""
+      this.manufacturer_name = ""
+      this.manufacturer_type = ""
       this.load()
     },
     save() {
-      this.request.post("/mfrs", this.form).then(res => {
+      this.request.post("/manufacturer", this.form).then(res => {
         if (res.code === '200') {
           this.$message.success("保存成功")
           this.dialogFormVisible = false
@@ -233,4 +230,5 @@ export default {
 .el-input {
   height: 32px;
 }
+
 </style>

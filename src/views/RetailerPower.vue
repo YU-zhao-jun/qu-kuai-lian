@@ -2,9 +2,9 @@
   <div class="container backdrop">
     <div class="demo-input-suffix">
       <el-row>
-        <span class="info_font">生产商权限</span>
+        <span class="info_font">零售商权限</span>
         <span class="search_x">名称：</span>
-        <el-input v-model="manufacturer_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
+        <el-input v-model="retailer_name" class="w-50 m-2" placeholder="Name" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <User/>
@@ -12,7 +12,7 @@
           </template>
         </el-input>
         <span class="search_x">类型：</span>
-        <el-input v-model="manufacturer_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
+        <el-input v-model="retailer_type" class="w-50 m-2" placeholder="Type" style="width: 150px">
           <template #prefix>
             <el-icon class="el-input__icon">
               <PieChart/>
@@ -27,9 +27,9 @@
     <!--    表单-->
     <el-table :data="tableData" border style="margin: 20px auto">
       <el-table-column fixed prop="id" label="ID" width="60"/>
-      <el-table-column prop="manufacturer_name" label="生产商名称" width="180"/>
-      <el-table-column prop="manufacturer_type" label="类型" width="150"/>
-      <el-table-column prop="manufacturer_account" label="账号" width="150"/>
+      <el-table-column prop="retailer_name" label="分销商名称" width="180"/>
+      <el-table-column prop="retailer_type" label="类型" width="150"/>
+      <el-table-column prop="retailer_account" label="账号" width="150"/>
       <el-table-column prop="menu_description" label="描述"/>
       <el-table-column fixed="right" label="操作" width="150">
         <template #default="scope">
@@ -40,40 +40,41 @@
     </el-table>
 
     <el-dialog v-model="menuDialogVis" center title="菜单分配" width="360px">
-      <el-scrollbar height="300px">
-      <el-tree
-          :props="props"
-          :data="menuData"
-          show-checkbox
-          node-key="id"
-          ref="tree"
-          :default-expanded-keys="expends"
-          :default-checked-keys="checks">
-        <template #default="{ node, data }">
+      <el-scrollbar height="200px">
+        <el-tree
+            :props="props"
+            :data="menuData"
+            show-checkbox
+            node-key="id"
+            ref="tree"
+            :check-strictly="true"
+            :default-expanded-keys="expends"
+            :default-checked-keys="checks">
+          <template #default="{ node, data }">
           <span class="custom-tree-node">
             <el-icon style="margin: 0 10px; font-size: 16px; align-items: center">
               <component :is="data.icon"></component>
             </el-icon>
             <span>{{ data.name }}</span>
          </span>
-        </template>
-      </el-tree>
+          </template>
+        </el-tree>
+      </el-scrollbar>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="menuDialogVis = false">取消</el-button>
           <el-button type="primary" @click="saveRoleMenu">确认</el-button>
         </div>
       </template>
-      </el-scrollbar>
     </el-dialog>
 
-    <el-dialog v-model="dialogFormVisible" center title="生产商信息" width="360px">
+    <el-dialog v-model="dialogFormVisible" center title="分销商信息" width="360px">
       <el-form :model="form" label-width="60px">
         <el-form-item label="名称">
-          <el-input v-model="form.manufacturer_name" style="width: 220px" autocomplete="off" :disabled="true"/>
+          <el-input v-model="form.retailer_name" style="width: 220px" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="类型">
-          <el-input v-model="form.manufacturer_type" style="width: 220px" autocomplete="off" :disabled="true"/>
+          <el-input v-model="form.retailer_type" style="width: 220px" autocomplete="off" :disabled="true"/>
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="form.menu_description" style="width: 220px" autocomplete="off"/>
@@ -111,7 +112,7 @@
 import {Search, Refresh, CirclePlus} from '@element-plus/icons-vue'
 
 export default {
-  name: "ManufacturerPower",
+  name: "RetailerPower",
   components: {},
   data() {
     return {
@@ -126,8 +127,8 @@ export default {
       total: 0,
       pageNum: 1,
       pageSize: 8,
-      manufacturer_name: "",
-      manufacturer_type: "",
+      retailer_name: "",
+      retailer_type: "",
       small: true,
       disabled: false,
       background: true,
@@ -145,12 +146,12 @@ export default {
   },
   methods: {
     load() {
-      this.request.get("/manufacturer/page", {
+      this.request.get("/retailer/page", {
         params: {
           pageNum: this.pageNum,
           pageSize: this.pageSize,
-          manufacturer_name: this.manufacturer_name,
-          manufacturer_type: this.manufacturer_type
+          retailer_name: this.retailer_name,
+          retailer_type: this.retailer_type
         }
       }).then(res => {
         this.tableData = res.data.records
@@ -167,13 +168,13 @@ export default {
         // 把后台返回的菜单数据处理成 id数组
         this.expends = this.menuData.map(v => v.id)
       })
-      this.request.get("/manufacturer/roleMenu/" + this.roleId.id).then(res => {
+      this.request.get("/retailer/roleMenu/" + this.roleId.id).then(res => {
         this.checks = res.data
       })
       this.menuDialogVis = true
     },
     saveRoleMenu() {
-      this.request.post("/manufacturer/roleMenu/" + this.roleId.id, this.$refs.tree.getCheckedKeys()).then(res => {
+      this.request.post("/retailer/roleMenu/" + this.roleId.id, this.$refs.tree.getCheckedKeys()).then(res => {
         if (res.code === '200') {
           this.$message.success("绑定成功")
           this.menuDialogVis = false
@@ -183,12 +184,12 @@ export default {
       })
     },
     reset() {
-      this.manufacturer_name = ""
-      this.manufacturer_type = ""
+      this.retailer_name = ""
+      this.retailer_type = ""
       this.load()
     },
     save() {
-      this.request.post("/manufacturer", this.form).then(res => {
+      this.request.post("/retailer", this.form).then(res => {
         if (res.code === '200') {
           this.$message.success("保存成功")
           this.dialogFormVisible = false

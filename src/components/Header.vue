@@ -11,7 +11,7 @@
     </div>
 
     <div class="User_xx">
-      <span>{{Admin_login.admin_name}}</span>
+      <span>{{User.admin_name || User.manufacturer_name || User.distributor_name || User.retailer_name}}</span>
     </div>
 
   </div>
@@ -20,7 +20,7 @@
 <script>
 
 export default {
-  name: "AdminHeader",
+  name: "Header",
   props: {
     collapseBtnClass: String,
     collapse: Boolean,
@@ -29,7 +29,7 @@ export default {
     return {
       isShow: true,
       currentPathName: "",
-      Admin_login: localStorage.getItem("adminUser")?JSON.parse(localStorage.getItem("adminUser")):{},
+      User: localStorage.getItem("User")?JSON.parse(localStorage.getItem("User")):{},
     }
   },
   computed: {
@@ -44,7 +44,7 @@ export default {
   },
   methods: {
     logout() {
-      this.$router.push("/")
+      this.$store.commit("logout")
       localStorage.removeItem("adminUser")
     }
   }
@@ -55,10 +55,11 @@ export default {
 
 .User_xx {
   position: absolute;
+  padding-right: 30px;
   right: 0;
-  width: 160px;
+  width: 300px;
   line-height: 60px;
-  text-align: center;
+  text-align: right;
   font-size: 18px;
   color: white;
 }
